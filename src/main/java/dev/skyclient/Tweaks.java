@@ -1,9 +1,7 @@
 package dev.skyclient;
 
-import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.ParticleStatus;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 
@@ -56,20 +54,45 @@ public final class Tweaks {
 		}
 	}
 
+	/** Leest de naam van een enum-optie (particles, clouds) zonder de klasse te hoeven kennen. */
+	private static String enumName(Object option) {
+		try {
+			Object cur = option.getClass().getMethod("get").invoke(option);
+			return ((Enum<?>) cur).name();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/** Zet een enum-optie op de waarde met deze naam, zonder de klasse te hoeven kennen. */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private static void setEnum(Object option, String name) {
+		if (name == null) return;
+		try {
+			Object cur = option.getClass().getMethod("get").invoke(option);
+			Class<?> type = ((Enum<?>) cur).getDeclaringClass();
+			Object value = Enum.valueOf((Class) type, name);
+			option.getClass().getMethod("set", Object.class).invoke(option, value);
+		} catch (Exception ignored) {
+		}
+	}
+
 	private static void applyPerformance(Options o) {
 		Config.set("perf.prev.view", Integer.toString(o.renderDistance().get()));
 		Config.set("perf.prev.sim", Integer.toString(o.simulationDistance().get()));
 		Config.set("perf.prev.entityScale", Double.toString(o.entityDistanceScaling().get()));
-		Config.set("perf.prev.particles", o.particles().get().name());
-		Config.set("perf.prev.clouds", o.cloudStatus().get().name());
+		String particles = enumName(o.particles());
+		String clouds = enumName(o.cloudStatus());
+		Config.set("perf.prev.particles", particles == null ? "" : particles);
+		Config.set("perf.prev.clouds", clouds == null ? "" : clouds);
 		Config.set("perf.prev.shadows", Boolean.toString(o.entityShadows().get()));
 		Config.set("perf.prev.blend", Integer.toString(o.biomeBlendRadius().get()));
 
 		o.renderDistance().set(Math.min(o.renderDistance().get(), 10));
 		o.simulationDistance().set(Math.min(o.simulationDistance().get(), 6));
 		o.entityDistanceScaling().set(0.6);
-		o.particles().set(ParticleStatus.MINIMAL);
-		o.cloudStatus().set(CloudStatus.OFF);
+		setEnum(o.particles(), "MINIMAL");
+		setEnum(o.cloudStatus(), "OFF");
 		o.entityShadows().set(false);
 		o.biomeBlendRadius().set(1);
 	}
@@ -79,8 +102,8 @@ public final class Tweaks {
 			o.renderDistance().set(Integer.parseInt(Config.get("perf.prev.view")));
 			o.simulationDistance().set(Integer.parseInt(Config.get("perf.prev.sim")));
 			o.entityDistanceScaling().set(Double.parseDouble(Config.get("perf.prev.entityScale")));
-			o.particles().set(ParticleStatus.valueOf(Config.get("perf.prev.particles")));
-			o.cloudStatus().set(CloudStatus.valueOf(Config.get("perf.prev.clouds")));
+			setEnum(o.particles(), emptyToNull(Config.get("perf.prev.particles")));
+			setEnum(o.cloudStatus(), emptyToNull(Config.get("perf.prev.clouds")));
 			o.entityShadows().set(Boolean.parseBoolean(Config.get("perf.prev.shadows")));
 			o.biomeBlendRadius().set(Integer.parseInt(Config.get("perf.prev.blend")));
 		} catch (RuntimeException ignored) {
@@ -88,5 +111,9 @@ public final class Tweaks {
 		for (String k : new String[]{"view", "sim", "entityScale", "particles", "clouds", "shadows", "blend"}) {
 			Config.remove("perf.prev." + k);
 		}
+	}
+
+	private static String emptyToNull(String s) {
+		return s == null || s.isEmpty() ? null : s;
 	}
 }

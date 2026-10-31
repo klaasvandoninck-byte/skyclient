@@ -1,6 +1,5 @@
 package dev.skyclient;
 
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -45,10 +44,19 @@ public final class MenuScreen extends Screen {
 		}).bounds(x0, ey, bw, bh).build());
 
 		addRenderableWidget(Button.builder(Component.literal("Lyrics-map openen"),
-				b -> Util.getPlatform().openPath(Config.DIR)).bounds(x0 + bw + gap, ey, bw, bh).build());
+				b -> openFolder()).bounds(x0 + bw + gap, ey, bw, bh).build());
 
 		addRenderableWidget(Button.builder(Component.literal("Klaar"), b -> onClose())
 				.bounds(x0 + 2 * (bw + gap), ey, bw, bh).build());
+	}
+
+	private static void openFolder() {
+		try {
+			String os = System.getProperty("os.name", "").toLowerCase();
+			String cmd = os.contains("win") ? "explorer" : (os.contains("mac") ? "open" : "xdg-open");
+			new ProcessBuilder(cmd, Config.DIR.toString()).start();
+		} catch (Exception ignored) {
+		}
 	}
 
 	@Override
