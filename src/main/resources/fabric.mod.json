@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "skyclient",
+  "version": "${version}",
+  "name": "SkyClient",
+  "description": "Visual client: lyrics in de lucht, mooie lucht, FPS-boost, freecam en ESP.",
+  "authors": ["SkyClient"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.skyclient.SkyClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
